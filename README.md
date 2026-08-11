@@ -121,7 +121,8 @@ vale para um clone recém-feito.
 O GitHub Actions repete o `validate` a cada push e Pull Request, em **Python
 3.13**, no **Linux e no Windows**. Um workflow separado audita as dependências
 (`pip-audit` sobre o `uv.lock`) e varre o histórico em busca de segredos
-(`gitleaks`), também semanalmente.
+(`gitleaks`), também semanalmente. Ao publicar uma GitHub Release, o workflow
+`Release` valida e anexa cada `dist/<skill>.zip` e o `dist/manifest.json` à release.
 
 Localmente, instale os hooks:
 
@@ -177,7 +178,8 @@ catálogo em [docs/agents.md](docs/agents.md).
 
 `python scripts/dev.py package` gera `dist/<skill>.zip` (determinístico, com
 `sha256` no `dist/manifest.json`) e `smoke-bundles` prova que a skill funciona
-fora daqui. Destinos e checklist de entrega em
+fora daqui. Ao publicar uma GitHub Release, esses arquivos são gerados a partir
+da tag e anexados automaticamente à release. Destinos e checklist de entrega em
 [docs/packaging.md](docs/packaging.md).
 
 ## Estrutura resumida

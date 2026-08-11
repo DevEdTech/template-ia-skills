@@ -20,7 +20,8 @@ Fluxo recomendado para levar uma ideia até uma skill distribuível.
 9. **Branch e commit**: `git checkout -b feat/<nome-da-skill>`, um incremento por commit.
 10. **Pull Request**: descreva o que a skill faz, quando dispara e o placar da avaliação.
 11. **Verificação automática**: aguarde o CI, que repete o `validate` no Linux e no Windows.
-12. **Distribuição**: `package-skill` quando a skill for para outro projeto ou time.
+12. **Distribuição**: use `package-skill` para uma entrega dirigida ou publique
+    uma GitHub Release para anexar automaticamente os pacotes validados.
 
 ## Ambiente
 
@@ -31,12 +32,13 @@ Fluxo recomendado para levar uma ideia até uma skill distribuível.
 
 ## Verificação automática
 
-Dois workflows rodam no GitHub Actions:
+Três workflows rodam no GitHub Actions:
 
-| Workflow   | Quando                           | O que faz                                                    |
-| ---------- | -------------------------------- | ------------------------------------------------------------ |
-| `ci`       | push, Pull Request               | `validate` em Python 3.13 × Linux/Windows, e `pre-commit`     |
-| `security` | push, Pull Request, semanalmente | `pip-audit` sobre o `uv.lock` e `gitleaks` sobre o histórico   |
+| Workflow   | Quando                           | O que faz                                                     |
+| ---------- | -------------------------------- | ------------------------------------------------------------- |
+| `ci`       | push, Pull Request               | `validate` em Python 3.13 × Linux/Windows, e `pre-commit`      |
+| `security` | push, Pull Request, semanalmente | `pip-audit` sobre o `uv.lock` e `gitleaks` sobre o histórico    |
+| `release`  | GitHub Release publicada         | valida e anexa os `.zip` e o manifesto à release               |
 
 O `validate` é a porta local e permanece **offline**. Duas verificações dependem
 de rede e por isso ficam fora dele:

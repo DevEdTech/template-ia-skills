@@ -48,6 +48,21 @@ repositório falha aqui — que é exatamente o ponto.
 Skills com `requirements.txt` são validadas, mas os scripts não são executados:
 as dependências não estão instaladas no ambiente de smoke.
 
+## Publicação automática em releases
+
+Ao publicar uma GitHub Release, `.github/workflows/release.yml` faz checkout da
+tag da release, instala as dependências bloqueadas e executa
+`python scripts/dev.py validate`. Somente depois de validação, testes,
+empacotamento e smoke bem-sucedidos, o workflow anexa à release:
+
+- um `dist/<nome>.zip` para cada skill;
+- `dist/manifest.json`, com os metadados e hashes dos pacotes.
+
+Releases em rascunho não distribuem artefatos. Se o job falhar, nenhum pacote é
+anexado; corrija a tag ou o código e publique uma nova release. Reexecutar um
+job bem-sucedido substitui anexos com o mesmo nome pelos bytes reproduzíveis
+gerados a partir da tag.
+
 ## Destinos de instalação
 
 | Destino | Caminho | Quando usar |
