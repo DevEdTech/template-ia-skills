@@ -12,7 +12,7 @@ STATE = {
     "projectName": "skills-project-template",
     "displayName": "Skills Project Template",
     "description": "Template para criar skills.",
-    "repository": "https://github.com/DevEdTech/project-template-skills",
+    "repository": "https://github.com/DevEdTech/template-ia-skills",
     "exampleRemoved": False,
 }
 
@@ -25,7 +25,7 @@ def _template(root: Path) -> None:
     )
     (root / "README.md").write_text(
         "# skills-project-template\n\nSkills Project Template.\n"
-        "https://github.com/DevEdTech/project-template-skills\n",
+        "https://github.com/DevEdTech/template-ia-skills\n",
         encoding="utf-8",
     )
     (root / "tasks.md").write_text("# Tarefas\n\n- [ ] antiga\n", encoding="utf-8")

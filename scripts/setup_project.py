@@ -33,8 +33,8 @@ STATE_FILE = ".template-state.json"
 EXAMPLE_SKILL = "summarize-csv"
 TEMPLATE_NAME = "skills-project-template"
 TEMPLATE_DISPLAY = "Skills Project Template"
-TEMPLATE_REPOSITORY = "https://github.com/DevEdTech/project-template-skills"
-TEXT_FILES = ("pyproject.toml", "README.md", "docs/distribution.md", STATE_FILE)
+TEMPLATE_REPOSITORY = "https://github.com/DevEdTech/template-ia-skills"
+TEXT_FILES = ("pyproject.toml", "README.md", "docs/packaging.md", STATE_FILE)
 RESET_TASKS = "# Tarefas\n\nNenhuma tarefa em andamento.\n"
 
 
