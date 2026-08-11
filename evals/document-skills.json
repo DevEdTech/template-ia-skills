@@ -1,0 +1,33 @@
+{
+  "skill": "document-skills",
+  "trigger": [
+    {
+      "prompt": "Criei uma skill nova; atualiza o catálogo e o README.",
+      "should_trigger": true
+    },
+    {
+      "prompt": "Removi duas skills, a documentação ficou desatualizada.",
+      "should_trigger": true
+    },
+    {
+      "prompt": "Escreve o processo dessa skill nova.",
+      "should_trigger": false
+    }
+  ],
+  "execution": [
+    {
+      "prompt": "Renomeei a skill resumir-csv para summarize-csv. Atualize a documentação.",
+      "expect": [
+        "Atualizou docs/agents.md mantendo o formato de linha verificado pelo check-docs.",
+        "Ajustou as menções no README e removeu as referências ao nome antigo.",
+        "Verificou evals/ e testes órfãos ligados ao nome anterior.",
+        "Rodou `python scripts/dev.py validate` e mostrou o resultado."
+      ],
+      "red_flags": [
+        "Copiou o conteúdo do SKILL.md para a documentação.",
+        "Criou um ADR para uma mudança rotineira de catálogo.",
+        "Deixou o catálogo divergente da pasta skills/."
+      ]
+    }
+  ]
+}

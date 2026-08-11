@@ -1,0 +1,33 @@
+{
+  "skill": "plan-skill",
+  "trigger": [
+    {
+      "prompt": "Queria que o agente soubesse gerar sozinho o relatório de fechamento que eu faço todo mês. Por onde começo?",
+      "should_trigger": true
+    },
+    {
+      "prompt": "Tenho uma ideia de automação repetitiva pro time; dá pra virar uma skill?",
+      "should_trigger": true
+    },
+    {
+      "prompt": "A skill summarize-csv está muito longa, dá pra encurtar?",
+      "should_trigger": false
+    }
+  ],
+  "execution": [
+    {
+      "prompt": "Quero uma skill que revise contratos em PDF antes do envio. Ajuda a definir?",
+      "expect": [
+        "Fez perguntas curtas em rodadas, de uma a três por vez, antes de escrever qualquer arquivo.",
+        "Levantou as skills existentes e checou sobreposição de gatilho.",
+        "Pediu aprovação explícita do resumo antes de criar docs/skills/<nome>.md.",
+        "Registrou gatilhos positivos e pelo menos um negativo com frases reais."
+      ],
+      "red_flags": [
+        "Criou o SKILL.md ou scripts nesta etapa.",
+        "Aceitou 'revisão simples' como especificação, sem pedir critério observável.",
+        "Deixou itens como TBD ou 'a definir' na especificação."
+      ]
+    }
+  ]
+}

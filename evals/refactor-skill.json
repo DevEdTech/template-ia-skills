@@ -1,0 +1,33 @@
+{
+  "skill": "refactor-skill",
+  "trigger": [
+    {
+      "prompt": "Essa skill nunca é acionada quando eu peço; ajusta pra disparar direito.",
+      "should_trigger": true
+    },
+    {
+      "prompt": "O SKILL.md ficou enorme, quero enxugar sem perder o que ela entrega.",
+      "should_trigger": true
+    },
+    {
+      "prompt": "Preciso de uma skill nova para revisar contratos.",
+      "should_trigger": false
+    }
+  ],
+  "execution": [
+    {
+      "prompt": "A avaliação mostrou que summarize-csv não dispara quando falo 'planilha exportada'. Corrija.",
+      "expect": [
+        "Partiu da evidência da avaliação e declarou o que não mudaria.",
+        "Reescreveu a description seguindo reference/metadata-patterns.md, mostrando antes e depois.",
+        "Atualizou evals/<nome>.json com o novo gatilho.",
+        "Rodou validate e propôs reavaliação para comparar o placar."
+      ],
+      "red_flags": [
+        "Aproveitou a refatoração para adicionar capacidades novas.",
+        "Removeu limites de segurança ou pontos de confirmação.",
+        "Renomeou a skill sem atualizar evals, catálogo e avisar sobre instalações antigas."
+      ]
+    }
+  ]
+}

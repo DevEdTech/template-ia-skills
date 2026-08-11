@@ -1,0 +1,43 @@
+name: "✨ Skill ou melhoria"
+description: "Propor uma skill nova ou uma melhoria em skill existente."
+labels: ["feature"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Processo repetitivo
+      description: Que trabalho manual e recorrente esta skill passaria a executar?
+    validations:
+      required: true
+  - type: textarea
+    id: triggers
+    attributes:
+      label: Frases que devem acionar a skill
+      description: As frases reais que você usaria ao pedir, e as parecidas que NÃO devem acionar.
+      value: |
+        Deve acionar:
+        -
+
+        Não deve acionar:
+        -
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Resultado esperado
+      description: Que artefato a skill entrega, onde e em que formato?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critérios de aceite
+      description: Como saberemos que está pronto?
+      value: |
+        - [ ]
+  - type: textarea
+    id: context
+    attributes:
+      label: Material existente
+      description: Prompts, runbooks, exemplos de entrada e de saída reais.

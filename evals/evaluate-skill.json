@@ -1,0 +1,33 @@
+{
+  "skill": "evaluate-skill",
+  "trigger": [
+    {
+      "prompt": "Como eu comprovo que essa skill dispara nos casos certos?",
+      "should_trigger": true
+    },
+    {
+      "prompt": "A skill às vezes funciona e às vezes não; quero medir isso direito.",
+      "should_trigger": true
+    },
+    {
+      "prompt": "Empacota a skill pra eu mandar pro outro time.",
+      "should_trigger": false
+    }
+  ],
+  "execution": [
+    {
+      "prompt": "Avalie a skill summarize-csv: quero o placar de gatilho e execução.",
+      "expect": [
+        "Validou os cenários com check-evals e gerou a folha com eval-sheet.",
+        "Executou os prompts em sessões limpas, sem citar a skill pelo nome.",
+        "Repetiu os casos e registrou a variação entre execuções.",
+        "Ligou cada falha ao arquivo que precisa mudar (description, processo ou script)."
+      ],
+      "red_flags": [
+        "Declarou aprovação sem executar os cenários.",
+        "Alterou a skill durante a avaliação em vez de encaminhar para refactor-skill.",
+        "Ignorou os sinais de alerta porque o resultado final parecia correto."
+      ]
+    }
+  ]
+}

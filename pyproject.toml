@@ -1,0 +1,108 @@
+[project]
+name = "skills-project-template"
+version = "0.1.0"
+description = "Template para criar, validar, avaliar e distribuir skills de agentes de IA."
+readme = "README.md"
+requires-python = ">=3.13"
+license = { text = "Proprietary" }
+authors = [{ name = "Sua organizacao" }]
+keywords = ["skills", "agents", "ai", "template"]
+
+# O produto deste repositorio sao as skills, nao um pacote Python instalavel.
+# Os scripts das skills usam apenas a biblioteca padrao para que cada skill
+# funcione sozinha em qualquer ambiente. Dependencias de uma skill especifica
+# vivem em skills/<nome>/requirements.txt, nunca aqui.
+dependencies = []
+
+[tool.uv]
+# Projeto sem pacote: o `uv sync` monta o ambiente de desenvolvimento sem
+# tentar construir um wheel do repositorio.
+package = false
+
+# Grupos de dependencias de desenvolvimento (PEP 735). O uv instala o grupo
+# "dev" automaticamente. Quem usa pip instala pelo requirements-dev.txt, que o
+# tests/test_toolchain.py impede de divergir deste grupo.
+[dependency-groups]
+dev = [
+  "ruff>=0.16.1",
+  "mypy>=1.14.0",
+  "pytest>=8.3.0",
+  "pytest-cov>=6.0.0",
+  "pre-commit>=4.0.0",
+]
+
+# ---------------------------------------------------------------------------
+# Ruff: linter + formatador (substitui black, isort e flake8).
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+src = ["scripts", "tests", "skills"]
+# As copias sincronizadas e os pacotes gerados nao sao codigo-fonte.
+extend-exclude = [".claude", ".agents", "dist"]
+
+[tool.ruff.lint]
+select = [
+  "E",   # pycodestyle (erros)
+  "W",   # pycodestyle (avisos)
+  "F",   # pyflakes
+  "I",   # isort (ordenacao de imports)
+  "N",   # pep8-naming
+  "UP",  # pyupgrade (sintaxe moderna)
+  "B",   # flake8-bugbear (armadilhas comuns)
+  "SIM", # flake8-simplify
+  "C4",  # flake8-comprehensions
+  "PTH", # flake8-use-pathlib
+  "RUF", # regras proprias do ruff
+  "S",   # flake8-bandit (seguranca)
+]
+ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+# Testes podem usar asserts e nomes menos rigidos.
+"tests/**/*.py" = ["N802", "N803", "S101"]
+# O runner e os verificadores locais confiam nos subcomandos que eles proprios montam.
+"scripts/**/*.py" = ["S603", "S607"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+# ---------------------------------------------------------------------------
+# mypy: checagem de tipos em modo estrito, inclusive nos scripts das skills.
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.13"
+strict = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_any_generics = true
+show_error_codes = true
+files = ["scripts", "tests", "skills"]
+
+# ---------------------------------------------------------------------------
+# pytest: descoberta e execucao de testes.
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+pythonpath = ["."]
+
+# ---------------------------------------------------------------------------
+# coverage: mede os scripts do template e os scripts das skills.
+# ---------------------------------------------------------------------------
+[tool.coverage.run]
+branch = true
+source = ["scripts", "skills"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+# Aplicado de fato: `validate` roda o pytest com `--cov`.
+fail_under = 80
+exclude_also = [
+  # Guarda de execucao direta: exercitada pelos smokes, nao pela suite.
+  'if __name__ == .__main__.:',
+]

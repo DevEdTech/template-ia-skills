@@ -1,0 +1,33 @@
+{
+  "skill": "create-skill",
+  "trigger": [
+    {
+      "prompt": "A especificação em docs/skills/revisar-contrato.md foi aprovada, pode gerar a skill.",
+      "should_trigger": true
+    },
+    {
+      "prompt": "Escreve pra mim os arquivos da skill que a gente combinou ontem.",
+      "should_trigger": true
+    },
+    {
+      "prompt": "Só quero saber se a descrição dessa skill está boa.",
+      "should_trigger": false
+    }
+  ],
+  "execution": [
+    {
+      "prompt": "Implemente a skill da especificação aprovada em docs/skills/revisar-contrato.md.",
+      "expect": [
+        "Gerou o esqueleto com `python scripts/dev.py new-skill` em vez de criar arquivos à mão.",
+        "Escreveu name e description conforme docs/skill-metadata.md.",
+        "Citou no SKILL.md todos os arquivos criados em scripts/, assets/ e reference/.",
+        "Preencheu evals/<nome>.json e rodou `python scripts/dev.py validate` até ficar verde."
+      ],
+      "red_flags": [
+        "Escreveu um SKILL.md acima de 500 linhas em vez de usar reference/.",
+        "Fez o script importar módulos do repositório, quebrando a autonomia da skill.",
+        "Adicionou dependência de terceiros sem requirements.txt e sem justificativa."
+      ]
+    }
+  ]
+}

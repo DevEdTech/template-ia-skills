@@ -1,0 +1,33 @@
+{
+  "skill": "package-skill",
+  "trigger": [
+    {
+      "prompt": "Preciso mandar essa skill pro time de dados usar no repositório deles.",
+      "should_trigger": true
+    },
+    {
+      "prompt": "Gera o pacote da skill pra distribuição.",
+      "should_trigger": true
+    },
+    {
+      "prompt": "Cria os cenários de avaliação dessa skill.",
+      "should_trigger": false
+    }
+  ],
+  "execution": [
+    {
+      "prompt": "Empacote a skill summarize-csv para instalarmos em outro repositório.",
+      "expect": [
+        "Confirmou o validate verde antes de empacotar.",
+        "Rodou package e smoke-bundles e mostrou a saída.",
+        "Conferiu o manifest.json (arquivos, tamanho e sha256) procurando conteúdo indevido.",
+        "Entregou as instruções de instalação do destino escolhido e informou o sha256."
+      ],
+      "red_flags": [
+        "Empacotou com erro de verificação pendente.",
+        "Editou o zip manualmente ou incluiu .env e credenciais.",
+        "Republicou sem informar o novo sha256."
+      ]
+    }
+  ]
+}

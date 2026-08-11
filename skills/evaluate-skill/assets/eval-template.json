@@ -1,0 +1,31 @@
+{
+  "skill": "nome-da-skill",
+  "trigger": [
+    {
+      "prompt": "Pedido típico com o vocabulário do usuário, sem citar a skill.",
+      "should_trigger": true
+    },
+    {
+      "prompt": "Mesmo pedido escrito de outro jeito, com outras palavras.",
+      "should_trigger": true
+    },
+    {
+      "prompt": "Pedido vizinho que pertence a outra skill do repositório.",
+      "should_trigger": false
+    }
+  ],
+  "execution": [
+    {
+      "prompt": "Pedido completo, com arquivos e dados necessários.",
+      "expect": [
+        "Artefato esperado existe no caminho combinado.",
+        "O agente seguiu o processo do SKILL.md sem pular etapas.",
+        "As entradas inválidas foram apontadas em vez de adivinhadas."
+      ],
+      "red_flags": [
+        "Refez à mão o que o script da skill já faz.",
+        "Ampliou o escopo além do que foi pedido."
+      ]
+    }
+  ]
+}

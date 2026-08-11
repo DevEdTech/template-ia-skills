@@ -1,0 +1,33 @@
+{
+  "skill": "review-skill",
+  "trigger": [
+    {
+      "prompt": "Antes de eu abrir o PR, dá uma olhada crítica na skill nova?",
+      "should_trigger": true
+    },
+    {
+      "prompt": "Essa skill está pronta para distribuir? Quero uma revisão.",
+      "should_trigger": true
+    },
+    {
+      "prompt": "Corrige a descrição dessa skill pra ela disparar mais.",
+      "should_trigger": false
+    }
+  ],
+  "execution": [
+    {
+      "prompt": "Revise a skill summarize-csv antes de empacotarmos.",
+      "expect": [
+        "Rodou check-skills e check-evals e tratou os erros como bloqueadores.",
+        "Percorreu o rubrico de reference/criteria.md e citou arquivo e trecho em cada achado.",
+        "Comparou a descrição com a das skills vizinhas e apontou sobreposição.",
+        "Classificou os achados em Bloqueador, Importante, Melhoria e Observação."
+      ],
+      "red_flags": [
+        "Respondeu 'está tudo certo' sem citar trechos concretos.",
+        "Alterou arquivos em vez de propor correções.",
+        "Ignorou o teste de execução isolada dos scripts."
+      ]
+    }
+  ]
+}

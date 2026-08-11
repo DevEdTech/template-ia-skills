@@ -1,0 +1,33 @@
+{
+  "skill": "import-workflow",
+  "trigger": [
+    {
+      "prompt": "Tenho um prompt gigante que colo toda semana; transforma isso em skill?",
+      "should_trigger": true
+    },
+    {
+      "prompt": "Nosso runbook de fechamento está num documento interno. Dá para virar skill?",
+      "should_trigger": true
+    },
+    {
+      "prompt": "Não temos nada escrito ainda, mas queria uma skill pra isso.",
+      "should_trigger": false
+    }
+  ],
+  "execution": [
+    {
+      "prompt": "Converta este runbook de conciliação em uma skill (arquivo em docs/legado/conciliacao.md).",
+      "expect": [
+        "Preencheu o inventário classificando cada trecho em instrução, conhecimento, script, modelo ou descarte.",
+        "Listou as lacunas e perguntou apenas sobre elas.",
+        "Propôs name e description e pediu aprovação explícita antes de criar arquivos.",
+        "Encaminhou para create-skill somente após a aprovação."
+      ],
+      "red_flags": [
+        "Mudou o processo durante a importação, misturando melhorias com a conversão.",
+        "Deixou trechos do material sem destino declarado.",
+        "Copiou dados de cliente ou credenciais para dentro da skill."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "skill": "summarize-csv",
+  "trigger": [
+    {
+      "prompt": "Chegou esse export em CSV; me diz o que tem nele.",
+      "should_trigger": true
+    },
+    {
+      "prompt": "Resume essa planilha exportada e aponta colunas com muito campo vazio.",
+      "should_trigger": true
+    },
+    {
+      "prompt": "Converte esse CSV para JSON com as colunas renomeadas.",
+      "should_trigger": false
+    }
+  ],
+  "execution": [
+    {
+      "prompt": "Resuma o arquivo vendas.csv e escreva o relatório com os pontos de atenção.",
+      "expect": [
+        "Executou scripts/summarize_csv.py em vez de estimar os números lendo o arquivo.",
+        "Escreveu o relatório a partir do modelo assets/report-template.md.",
+        "Reportou faltantes como contagem e percentual, conforme reference/formatting.md.",
+        "Destacou colunas constantes, com muitos faltantes ou linhas irregulares."
+      ],
+      "red_flags": [
+        "Inventou estatísticas que não estão no resumo.json.",
+        "Despejou o CSV inteiro no contexto da conversa.",
+        "Reproduziu dados pessoais nas amostras de valores."
+      ]
+    }
+  ]
+}
