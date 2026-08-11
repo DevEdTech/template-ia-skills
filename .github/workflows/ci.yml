@@ -67,6 +67,11 @@ jobs:
           version: "0.11.32"
           enable-cache: true
 
+      # O job roda em checkout próprio; as cópias ignoradas não existem até
+      # serem geradas, e o hook check-skills exige que estejam sincronizadas.
+      - name: Sincronizar cópias das skills
+        run: uv run python scripts/dev.py sync-skills
+
       # Garante que quem não instalou os hooks localmente ainda seja coberto.
       - name: Rodar hooks em todos os arquivos
         run: uv run pre-commit run --all-files --show-diff-on-failure
