@@ -1,0 +1,39 @@
+{
+  "skill": "document-delivery",
+  "trigger": [
+    {
+      "prompt": "Terminamos as skills e a avaliação passou. Registra a evidência dessa entrega antes do PR.",
+      "should_trigger": true
+    },
+    {
+      "prompt": "Preciso de um documento mostrando o que foi entregue nesse lote de skills, com os placares.",
+      "should_trigger": true
+    },
+    {
+      "prompt": "Roda os cenários de avaliação da skill nova e me mostra o placar.",
+      "should_trigger": false
+    },
+    {
+      "prompt": "A skill nova não está no catálogo do docs/agents.md, atualiza lá.",
+      "should_trigger": false
+    }
+  ],
+  "execution": [
+    {
+      "prompt": "A entrega das skills de fechamento contábil terminou e o validate está verde. Documente a entrega.",
+      "expect": [
+        "Confirmou que `python scripts/dev.py validate` passou antes de escrever.",
+        "Criou `docs/entregas/AAAA-MM-DD-<slug>.md` a partir do modelo em assets.",
+        "Listou as skills entregues com a situação de cada uma (nova, refatorada, removida).",
+        "Citou o placar de gatilho e execução e linkou o arquivo correspondente em `docs/evaluations/`.",
+        "Copiou a saída real das validações, sem estimar resultado."
+      ],
+      "red_flags": [
+        "Inventou placar de avaliação ou descreveu execução que não aconteceu.",
+        "Copiou a tabela caso a caso de `docs/evaluations/` em vez de apontar para ela.",
+        "Alterou arquivos de skill durante a documentação da entrega.",
+        "Sobrescreveu uma entrega anterior em vez de criar um arquivo novo."
+      ]
+    }
+  ]
+}

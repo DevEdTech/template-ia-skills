@@ -23,6 +23,8 @@ tarefa; deixe as regras fixas nos arquivos.
 - **refactor-skill** — corrige gatilho, tamanho e estabilidade de uma skill existente, preservando o que ela entrega.
 - **package-skill** — empacota skills validadas e entrega as instruções de instalação no destino escolhido.
 - **document-skills** — atualiza catálogo, README e ADRs quando o conjunto de skills muda.
+- **document-delivery** — registra em `docs/entregas` a evidência da entrega: skills entregues, placar das avaliações e validações.
+- **update-readme** — reescreve o `README.md` inteiro na estrutura padrão, depois do setup ou quando ele perdeu a forma.
 - **summarize-csv** — skill de demonstração: resume um CSV com script, modelo e referência (remova-a no setup).
 
 As skills canônicas ficam em `skills/`; as cópias em `.claude/skills` e

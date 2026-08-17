@@ -19,6 +19,9 @@ quem chega ao repositório encontre a skill certa sem abrir os arquivos.
 ## Quando não usar
 
 - Mudança apenas interna a uma skill, sem efeito no gatilho nem no resultado.
+- Reescrita do `README.md` inteiro, quando ele perdeu a estrutura ou ainda
+  descreve o template: isso é `update-readme`. Aqui você ajusta apenas os
+  trechos que citam skills por nome.
 
 ## Processo
 

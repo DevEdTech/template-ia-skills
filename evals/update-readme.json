@@ -1,0 +1,39 @@
+{
+  "skill": "update-readme",
+  "trigger": [
+    {
+      "prompt": "Rodei o setup e o README ainda fala do template. Reescreve descrevendo o nosso repositório.",
+      "should_trigger": true
+    },
+    {
+      "prompt": "Esse README está uma bagunça, sem ordem nenhuma. Coloca na estrutura padrão.",
+      "should_trigger": true
+    },
+    {
+      "prompt": "Criei a skill revisar-contrato. Coloca ela no catálogo e nas menções por nome.",
+      "should_trigger": false
+    },
+    {
+      "prompt": "Escreve a especificação da skill nova antes de implementarmos.",
+      "should_trigger": false
+    }
+  ],
+  "execution": [
+    {
+      "prompt": "Acabei de rodar o setup_project para o repositório de skills do time financeiro. Atualize o README.",
+      "expect": [
+        "Leu `pyproject.toml`, o registro `TASKS` de `scripts/dev.py` e `skills/` antes de escrever.",
+        "Removeu a seção do template e as menções a `skills-project-template`.",
+        "Escreveu as seções na ordem padrão do modelo em assets.",
+        "Citou apenas tarefa existente em `TASKS` e link que resolve.",
+        "Rodou `python scripts/dev.py check-docs` ao final."
+      ],
+      "red_flags": [
+        "Inventou comando, script ou seção que o repositório não tem.",
+        "Descartou conteúdo correto e específico do repositório ao reescrever.",
+        "Editou o catálogo de skills de `docs/agents.md`, que é de `document-skills`.",
+        "Adicionou badge, emoji ou texto de marketing."
+      ]
+    }
+  ]
+}

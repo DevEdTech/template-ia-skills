@@ -170,7 +170,10 @@ plan-skill → create-skill → evaluate-skill → review-skill → package-skil
 ```
 
 `import-workflow` entra antes de `create-skill` quando o processo já existe fora
-do repositório; `document-skills` fecha qualquer mudança no conjunto de skills.
+do repositório; `document-skills` fecha qualquer mudança no conjunto de skills e
+`document-delivery` registra a evidência da entrega em
+[docs/entregas](docs/entregas/README.md). `update-readme` reescreve este README
+quando ele deixa de descrever o repositório.
 Detalhes em [docs/development-process.md](docs/development-process.md) e no
 catálogo em [docs/agents.md](docs/agents.md).
 
