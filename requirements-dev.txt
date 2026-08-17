@@ -1,7 +1,7 @@
 # Espelho de [dependency-groups].dev do pyproject.toml, para quem usa pip.
 # A duplicacao e inevitavel: o pip nao le PEP 735. O tests/test_toolchain.py
 # impede que os dois arquivos divirjam.
-ruff>=0.16.1
+ruff>=0.16.3
 mypy>=1.14.0
 pytest>=8.3.0
 pytest-cov>=6.0.0

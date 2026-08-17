@@ -24,7 +24,7 @@ package = false
 # tests/test_toolchain.py impede de divergir deste grupo.
 [dependency-groups]
 dev = [
-  "ruff>=0.16.1",
+  "ruff>=0.16.3",
   "mypy>=1.14.0",
   "pytest>=8.3.0",
   "pytest-cov>=6.0.0",
