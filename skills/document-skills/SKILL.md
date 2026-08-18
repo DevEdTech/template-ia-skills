@@ -22,6 +22,8 @@ quem chega ao repositório encontre a skill certa sem abrir os arquivos.
 - Reescrita do `README.md` inteiro, quando ele perdeu a estrutura ou ainda
   descreve o template: isso é `update-readme`. Aqui você ajusta apenas os
   trechos que citam skills por nome.
+- Mudança nas **regras** do repositório: isso é `update-agents`, que cuida do
+  `AGENTS.md` da raiz. Aqui você cuida do catálogo em `docs/agents.md`.
 
 ## Processo
 

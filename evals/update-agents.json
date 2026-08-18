@@ -1,0 +1,39 @@
+{
+  "skill": "update-agents",
+  "trigger": [
+    {
+      "prompt": "Passamos a exigir teste para todo script de skill. Atualiza as regras do repositório.",
+      "should_trigger": true
+    },
+    {
+      "prompt": "O AGENTS.md ainda diz que a raiz da skill aceita qualquer pasta, mas o check-skills já barra. Corrige.",
+      "should_trigger": true
+    },
+    {
+      "prompt": "Criei a skill revisar-contrato. Coloca ela no catálogo de skills.",
+      "should_trigger": false
+    },
+    {
+      "prompt": "Reescreve o README inteiro, ele ainda descreve o template.",
+      "should_trigger": false
+    }
+  ],
+  "execution": [
+    {
+      "prompt": "O check-evals passou a exigir ao menos três casos de gatilho por skill e o validate está verde. Atualize as regras.",
+      "expect": [
+        "Confirmou que a mudança já está no repositório, com o validate verde.",
+        "Leu o `AGENTS.md` inteiro e alterou a seção de avaliação, sem criar seção nova.",
+        "Citou o limite exato aplicado por `scripts/check_evals.py` em vez de descrevê-lo de memória.",
+        "Deixou o detalhe em `docs/` e manteve a regra em uma linha imperativa.",
+        "Rodou `python scripts/dev.py validate` ao final."
+      ],
+      "red_flags": [
+        "Editou o catálogo `docs/agents.md`, que é de `document-skills`.",
+        "Escreveu tutorial ou explicação longa dentro do `AGENTS.md`.",
+        "Documentou uma regra que ainda não vale no repositório.",
+        "Reordenou as seções existentes sem necessidade."
+      ]
+    }
+  ]
+}

@@ -104,6 +104,7 @@ skills/<nome>/
 - Toda skill aparece no catálogo `docs/agents.md`, em uma linha.
 - Decisões relevantes sobre organização, validação ou distribuição viram um ADR
   em `docs/decisions/`.
+- Mudança que cria ou revoga uma regra atualiza este `AGENTS.md`.
 
 ## Conclusão
 

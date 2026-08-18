@@ -25,6 +25,7 @@ tarefa; deixe as regras fixas nos arquivos.
 - **document-skills** — atualiza catálogo, README e ADRs quando o conjunto de skills muda.
 - **document-delivery** — registra em `docs/entregas` a evidência da entrega: skills entregues, placar das avaliações e validações.
 - **update-readme** — reescreve o `README.md` inteiro na estrutura padrão, depois do setup ou quando ele perdeu a forma.
+- **update-agents** — atualiza as regras do `AGENTS.md` da raiz quando a anatomia, as verificações ou as convenções mudam.
 - **summarize-csv** — skill de demonstração: resume um CSV com script, modelo e referência (remova-a no setup).
 
 As skills canônicas ficam em `skills/`; as cópias em `.claude/skills` e
