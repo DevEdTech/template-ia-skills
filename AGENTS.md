@@ -108,6 +108,6 @@ skills/<nome>/
 
 ## Conclusão
 
-Uma tarefa só está concluída quando critérios de aceite, verificações de skills,
-avaliações, lint, typecheck, testes, cobertura, empacotamento, documentação e o
-CI estiverem satisfeitos.
+Uma tarefa só está concluída quando todos os itens da definição de concluído
+estiverem satisfeitos. A lista fica em `docs/development-process.md` e é a
+única fonte da verdade.

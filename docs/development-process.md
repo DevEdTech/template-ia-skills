@@ -88,6 +88,7 @@ Outros prefixos úteis: `refactor:`, `chore:`.
 
 - Os critérios de aceite da especificação foram atendidos.
 - `python scripts/dev.py validate` está verde.
+- O CI está verde no Pull Request.
 - A skill foi avaliada e o placar registrado.
 - O catálogo e a documentação estão coerentes.
 - As alterações estão registradas no Git.
