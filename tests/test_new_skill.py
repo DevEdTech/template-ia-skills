@@ -36,7 +36,7 @@ def test_esqueleto_gerado_passa_nas_verificacoes(tmp_path: Path) -> None:
     create_skill(tmp_path, "resumir planilha", {"scripts", "assets", "reference"})
 
     skill = tmp_path / "skills" / "resumir-planilha"
-    assert validate_skill(skill) == []
+    assert [f for f in validate_skill(skill) if f.is_error] == []
     assert check_evals(tmp_path) == []
     assert (skill / "scripts/resumir_planilha.py").is_file()
     assert (skill / "assets/output-template.md").is_file()
@@ -48,7 +48,7 @@ def test_esqueleto_minimo_sem_partes_opcionais(tmp_path: Path) -> None:
 
     skill = tmp_path / "skills" / "resumir-planilha"
     assert sorted(path.name for path in skill.iterdir()) == ["SKILL.md"]
-    assert validate_skill(skill) == []
+    assert [f for f in validate_skill(skill) if f.is_error] == []
 
 
 def test_recusa_parte_desconhecida(tmp_path: Path) -> None:

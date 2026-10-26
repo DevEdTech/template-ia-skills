@@ -17,7 +17,7 @@ def test_sincroniza_para_as_duas_copias(tmp_path: Path, skill_factory: SkillFact
     assert sync_skills(tmp_path) == ["resumir-csv"]
     for relative in COPY_DIRS:
         assert (tmp_path / relative / "resumir-csv" / "SKILL.md").is_file()
-    assert check_skills(tmp_path) == []
+    assert [f for f in check_skills(tmp_path) if f.is_error] == []
 
 
 def test_remove_skill_que_deixou_de_existir(tmp_path: Path, skill_factory: SkillFactory) -> None:
@@ -42,7 +42,7 @@ def test_ignora_bytecode(tmp_path: Path, skill_factory: SkillFactory) -> None:
     sync_skills(tmp_path)
 
     assert not (tmp_path / COPY_DIRS[0] / "resumir-csv" / "scripts" / "__pycache__").exists()
-    assert check_skills(tmp_path) == []
+    assert [f for f in check_skills(tmp_path) if f.is_error] == []
 
 
 def test_repositorio_sem_skills(tmp_path: Path) -> None:

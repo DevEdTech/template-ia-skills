@@ -25,11 +25,12 @@ jobs:
         # A matriz varia só o sistema: as skills precisam funcionar igual
         # nos dois, e há código sensível a SO (caminhos, separadores, zip).
         os: [ubuntu-latest, windows-latest]
-        # Uma única versão — a mesma do `requires-python` e do
-        # `.python-version`, para que o testado e o prometido não divirjam.
+        # Duas versões: a mínima declarada em `requires-python` e
+        # `.python-version`, para que o prometido seja testado, e a estável
+        # seguinte, para que a próxima atualização não chegue como surpresa.
         # Declarada na matriz (e não em `env`) porque o contexto `env` não
         # existe em `jobs.<id>.name`, e ali o valor precisa aparecer.
-        python-version: ["3.13"]
+        python-version: ["3.13", "3.14"]
     env:
       # Tem precedência sobre o .python-version; mantidos iguais de propósito.
       UV_PYTHON: ${{ matrix.python-version }}

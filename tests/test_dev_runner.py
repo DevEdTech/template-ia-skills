@@ -39,8 +39,9 @@ def test_tarefa_desconhecida_retorna_codigo_dois(capsys: pytest.CaptureFixture[s
 
 
 def test_toda_tarefa_monta_um_comando(recorded: list[list[str]]) -> None:
-    # `audit` e `check-workflows` dependem de rede/uv e são exercitadas à parte.
-    ignoradas = {"audit", "check-workflows"}
+    # `audit` e `check-workflows` dependem de rede/uv e são exercitadas à
+    # parte; `show-profile` apenas imprime o estado, sem montar comando.
+    ignoradas = {"audit", "check-workflows", "show-profile"}
     for name in dev.TASKS:
         if name in ignoradas:
             continue
@@ -118,7 +119,7 @@ def test_dependencias_de_dev_espelhadas_no_requirements() -> None:
 
 def test_tarefas_relevantes_documentadas_no_readme() -> None:
     # Variações de conveniência não precisam de linha própria na tabela.
-    variacoes = {"format-check", "lint-fix"}
+    variacoes = {"format-check", "lint-fix", "show-profile"}
     readme = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
     ausentes = {name for name in dev.TASKS if f"dev.py {name}" not in readme} - variacoes
 

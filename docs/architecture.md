@@ -20,7 +20,8 @@ skills/                     # skills canônicas (fonte da verdade)
     ├── SKILL.md            # frontmatter + processo executável
     ├── scripts/            # passos determinísticos em Python (stdlib)
     ├── assets/             # modelos preenchidos pela skill
-    └── reference/          # conhecimento carregado sob demanda
+    ├── reference/          # conhecimento carregado sob demanda
+    └── tests/              # testes da skill; viajam no Git, não no pacote
 evals/                      # cenários de gatilho e execução, um JSON por skill
 scripts/                    # ferramentas do template (runner e verificações)
 tests/                      # testes das ferramentas e dos scripts das skills
@@ -52,7 +53,8 @@ que resolve.
 
 `python scripts/dev.py check-skills` reprova:
 
-- entrada não prevista na raiz da skill (só `SKILL.md`, `scripts/`, `assets/`, `reference/`, `requirements.txt`);
+- entrada não prevista na raiz da skill (só `SKILL.md`, `scripts/`, `assets/`,
+  `reference/`, `tests/`, `requirements.txt`);
 - frontmatter com chave desconhecida, `name` divergente da pasta ou fora do padrão;
 - descrição fora dos limites de tamanho, sem indicação de quando usar, ou começando com enchimento;
 - `SKILL.md` acima de 500 linhas ou sem título;
@@ -61,6 +63,11 @@ que resolve.
 - script sem docstring, fora de `snake_case`, com nome repetido em outra skill ou importando pacote não declarado;
 - skill acima do limite de tamanho;
 - cópias em `.claude/skills` e `.agents/skills` divergentes.
+
+Dos achados, dois grupos não reprovam: as verificações de redação da descrição
+são heurística e apenas avisam, e os limites de tamanho admitem dispensa
+justificada em `metadata.waivers`. O perfil `rigoroso` trata ambos como falha.
+Veja a [ADR 0005](decisions/0005-limites-com-dispensa.md).
 
 `python scripts/dev.py smoke-bundles` vai além: extrai o pacote em um diretório
 temporário, revalida a skill fora do repositório e roda cada script com

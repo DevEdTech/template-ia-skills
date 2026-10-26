@@ -24,11 +24,11 @@ package = false
 # tests/test_toolchain.py impede de divergir deste grupo.
 [dependency-groups]
 dev = [
-  "ruff>=0.16.1",
-  "mypy>=1.14.0",
-  "pytest>=8.3.0",
-  "pytest-cov>=6.0.0",
-  "pre-commit>=4.0.0",
+  "ruff>=0.17.2",
+  "mypy>=2.3.0",
+  "pytest>=9.1.0",
+  "pytest-cov>=7.1.0",
+  "pre-commit>=4.4.0",
 ]
 
 # ---------------------------------------------------------------------------
@@ -100,8 +100,10 @@ source = ["scripts", "skills"]
 [tool.coverage.report]
 show_missing = true
 skip_covered = true
-# Aplicado de fato: `validate` roda o pytest com `--cov`.
-fail_under = 80
+# Piso de seguranca para quem roda `pytest --cov` a mao. O valor que vale no
+# `validate` vem do perfil do projeto (scripts/project_config.py), passado como
+# `--cov-fail-under`: um numero fixo aqui nao sabe se o projeto e prototipo.
+fail_under = 0
 exclude_also = [
   # Guarda de execucao direta: exercitada pelos smokes, nao pela suite.
   'if __name__ == .__main__.:',

@@ -3,6 +3,19 @@
 Este repositório produz **skills para agentes de IA**. O artefato entregue não é
 um aplicativo: é um conjunto de skills validadas, avaliadas e empacotadas.
 
+## Perfil deste projeto
+
+O perfil fica em `.template-state.json` e decide o que bloqueia:
+
+```bash
+python scripts/dev.py show-profile
+```
+
+Em `prototipo`, só `check-skills`, lint, tipos e testes bloqueiam. Em
+`rigoroso` — o perfil de quem publica — aviso de heurística e dispensa
+justificada também reprovam. Na dúvida, `show-profile` é a fonte da verdade,
+não este texto.
+
 ## Leia primeiro
 
 1. README.md
@@ -19,7 +32,8 @@ um aplicativo: é um conjunto de skills validadas, avaliadas e empacotadas.
 3. Apresente um plano para mudanças que afetam vários arquivos.
 4. Mantenha as alterações dentro do escopo solicitado.
 5. Atualize os cenários em `evals/` sempre que o gatilho ou o resultado mudar.
-6. Execute `python scripts/dev.py validate`.
+6. Execute `python scripts/dev.py validate --skill <nome>` ao iterar e
+   `python scripts/dev.py validate` antes de concluir.
 7. Revise o diff final.
 8. Atualize a documentação afetada (catálogo em `docs/agents.md`).
 
@@ -48,6 +62,23 @@ skills/<nome>/
 - Sem enchimento: não comece com "Esta skill...".
 - Regras completas e exemplos em `docs/skill-metadata.md`.
 
+## Limites e dispensas
+
+Os limites de tamanho admitem dispensa justificada; as verificações de
+redação são heurística e apenas avisam. Veja a
+[ADR 0005](docs/decisions/0005-limites-com-dispensa.md).
+
+- Quando um limite (`body-lines`, `name-terms`, `top-level-entry`,
+  `skill-size`...) estiver no caminho de uma skill legítima, declare a dispensa
+  em `metadata.waivers`, com o motivo em pelo menos 30 caracteres.
+- A dispensa aparece no relatório com o motivo ao lado: ela registra uma
+  decisão revisável, não desliga a regra.
+- Não dispense o que é essencial (nome divergente, link quebrado, órfão,
+  import indevido): a verificação recusa e reprova.
+- Não pique uma skill em duas só para caber no número. Se o conteúdo é mesmo
+  ocasional, ele pertence a `reference/`; se é de toda execução, dispense e
+  explique.
+
 ## Divulgação progressiva
 
 - O `SKILL.md` fica abaixo de 500 linhas e contém o que é usado em **toda** execução.
@@ -63,7 +94,9 @@ skills/<nome>/
   pasta da skill, justificativa no pull request e ADR quando virar padrão.
 - Erros em `stderr` com código de saída diferente de zero.
 - O script não escreve fora dos caminhos recebidos por argumento.
-- Todo script tem teste em `tests/skills/`, cobrindo sucesso, entrada inválida e caso vazio.
+- Todo script tem teste em `tests/skills/` (do repositório) ou em `tests/`
+  dentro da própria skill, cobrindo sucesso, entrada inválida e caso vazio. O
+  `tests/` da skill viaja com ela no Git e fica fora do pacote distribuído.
 
 ## Fluxos de trabalho complexos
 

@@ -110,6 +110,38 @@ Antes de considerar qualquer alteração pronta:
 python scripts/dev.py validate
 ```
 
+O que esse comando roda depende do **perfil** declarado em
+`.template-state.json`:
+
+| Perfil      | Para quê                      | O que bloqueia                                       |
+| ----------- | ----------------------------- | ---------------------------------------------------- |
+| `prototipo` | explorar uma skill nova       | `check-skills`, lint, tipos e testes                 |
+| `padrao`    | o trabalho normal             | tudo, com cobertura mínima de 70%                    |
+| `rigoroso`  | publicar para outras pessoas  | tudo, cobertura 80% e **aviso de skill também falha** |
+
+No `rigoroso`, heurística e dispensa justificada deixam de ser aviso e passam a
+reprovar: é o perfil de quem distribui pacote para a máquina de outra pessoa.
+
+As flags evitam pagar o gate inteiro em cada iteração:
+
+| Comando                                           | Para quê                                        |
+| ------------------------------------------------- | ----------------------------------------------- |
+| `dev.py validate --list`                          | ver perfil, capacidades e o que bloqueia        |
+| `dev.py validate --quick`                         | skills, lint, tipos e testes sem cobertura      |
+| `dev.py validate --changed`                       | só o que os arquivos alterados afetam           |
+| `dev.py validate --changed main`                  | idem, comparando a branch com `main`            |
+| `dev.py validate --skill resumir-csv`             | só uma skill, seu eval, seu teste e seu pacote  |
+| `dev.py validate --only lint test`                | só estas suítes                                 |
+| `dev.py validate --skip package smoke-bundles`    | tudo menos estas                                |
+| `dev.py validate --strict`                        | tratar aviso como falha                         |
+| `dev.py validate --no-bail`                       | rodar tudo antes de falhar                      |
+
+A unidade de escopo é a **skill**, não o módulo — e isso não é
+simplificação: skill não importa skill ([ADR 0003](docs/decisions/0003-scripts-stdlib-e-autocontidos.md)),
+então não existe fechamento transitivo a calcular. Mexer numa skill afeta
+aquela skill, o eval dela e o pacote dela. Execução parcial não aplica
+cobertura global, e mudança de configuração cancela a seleção e roda tudo.
+
 O comando executa, em sequência: sincronização das skills, verificação de
 metadados e estrutura, verificação dos cenários de avaliação, verificação da
 documentação, formatação, lint, checagem de tipos, testes com cobertura mínima,
@@ -155,7 +187,8 @@ python scripts/dev.py audit
 | `python scripts/dev.py test-cov`           | Roda os testes medindo cobertura                                |
 | `python scripts/dev.py check-workflows`    | Valida os workflows do GitHub Actions (actionlint)              |
 | `python scripts/dev.py audit`              | Audita as dependências em busca de vulnerabilidades             |
-| `python scripts/dev.py validate`           | Roda tudo: skills, docs, qualidade, testes e pacotes            |
+| `python scripts/dev.py validate`           | Roda as suítes do perfil (veja as flags abaixo)                 |
+| `python scripts/dev.py show-profile`       | Mostra o perfil, as capacidades e o que bloqueia                |
 
 > **Atalho Unix (opcional):** no macOS e Linux há um `Makefile` — `make validate`,
 > `make test`, etc. No Windows, use `python scripts/dev.py <tarefa>`, que funciona

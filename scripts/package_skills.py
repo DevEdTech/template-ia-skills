@@ -30,7 +30,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from scripts.check_skills import check_skills, is_content, parse_frontmatter  # noqa: E402
+from scripts.check_skills import check_skills, is_packaged, parse_frontmatter  # noqa: E402
 
 DIST_DIRNAME = "dist"
 # Data fixa exigida pelo formato zip (o campo não aceita anos anteriores a 1980).
@@ -57,7 +57,7 @@ def build_bundle(skill_dir: Path, dist_dir: Path) -> Path:
     """Gera `dist/<skill>.zip` com a pasta da skill na raiz do arquivo."""
     dist_dir.mkdir(parents=True, exist_ok=True)
     bundle = dist_dir / f"{skill_dir.name}.zip"
-    files = sorted(path for path in skill_dir.rglob("*") if is_content(path))
+    files = sorted(path for path in skill_dir.rglob("*") if is_packaged(path, skill_dir))
 
     with zipfile.ZipFile(bundle, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         for path in files:
@@ -88,7 +88,7 @@ def build_bundles(root: Path = PROJECT_ROOT, only: str | None = None) -> list[Pa
                 "files": sorted(
                     path.relative_to(skill_dir).as_posix()
                     for path in skill_dir.rglob("*")
-                    if is_content(path)
+                    if is_packaged(path, skill_dir)
                 ),
                 "bytes": len(payload),
                 "sha256": hashlib.sha256(payload).hexdigest(),
@@ -114,11 +114,13 @@ def main() -> int:
     args = parser.parse_args()
     root = args.root.resolve()
 
-    errors = check_skills(root, compare_copies=False)
+    # Aviso nao cancela empacotamento: heuristica e dispensa justificada nao
+    # tornam o pacote invalido. Erro, sim.
+    errors = [finding for finding in check_skills(root, compare_copies=False) if finding.is_error]
     if errors:
         print("Empacotamento cancelado: as skills não passaram na verificação.\n", file=sys.stderr)
         for error in errors:
-            print(f"  - {error}", file=sys.stderr)
+            print(f"  - [{error.rule}] {error.message}", file=sys.stderr)
         return 1
 
     bundles = build_bundles(root, args.skill)

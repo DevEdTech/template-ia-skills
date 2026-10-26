@@ -29,6 +29,13 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS_DIR = PROJECT_ROOT / "scripts"
 
+# `scripts` e um pacote: os modulos de apoio (project_config, validate) sao
+# importados qualificados, como o mypy e o pytest os veem. Para isso a raiz
+# precisa estar no caminho de busca, porque executar `python scripts/dev.py`
+# coloca `scripts/` ali, nao a raiz.
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 # uv disponível? Define como as ferramentas serão invocadas.
 _HAS_UV = shutil.which("uv") is not None
 
@@ -182,25 +189,20 @@ def task_audit(args: list[str]) -> int:
         return _run(["uvx", "pip-audit", "--requirement", str(requirements), *args])
 
 
+def task_show_profile(args: list[str]) -> int:
+    """Atalho para `validate --list`, que já descreve perfil e capacidades."""
+    return task_validate(["--list", *args])
+
+
 def task_validate(args: list[str]) -> int:
-    """Porta única de qualidade: roda tudo, na ordem, parando no primeiro erro."""
-    return _run_all(
-        [
-            # As cópias de skills são artefatos gerados e ignorados pelo Git:
-            # regenera antes de conferir para que um clone novo já fique verde.
-            _script("sync_skills.py"),
-            _script("check_skills.py"),
-            _script("check_evals.py"),
-            _script("check_docs.py"),
-            _tool("ruff", "format", "--check"),
-            _tool("ruff", "check"),
-            _tool("mypy"),
-            # Com `--cov` o limite de cobertura do pyproject.toml passa a valer.
-            _tool("pytest", "--cov"),
-            _script("package_skills.py"),
-            _script("smoke_bundles.py"),
-        ]
-    )
+    """Porta única de qualidade, com perfil e flags.
+
+    As suítes, o que bloqueia e o que apenas avisa vêm de `project_config.py`;
+    a seleção vem das flags. `dev.py validate --help` lista todas.
+    """
+    from scripts.validate import run_validate
+
+    return run_validate(args, {"tool": _tool, "script": _script, "run": _run})
 
 
 # Registro de tarefas: nome -> (função, descrição).
@@ -222,7 +224,11 @@ TASKS = {
     "eval-sheet": (task_eval_sheet, "Imprime a folha de avaliação para rodar com um agente."),
     "check-workflows": (task_check_workflows, "Valida os workflows do GitHub Actions."),
     "audit": (task_audit, "Audita as dependências em busca de vulnerabilidades."),
-    "validate": (task_validate, "Roda skills, docs, qualidade, testes e pacotes."),
+    "validate": (
+        task_validate,
+        "Roda as suítes do perfil (--list, --quick, --changed, --skill, --only).",
+    ),
+    "show-profile": (task_show_profile, "Mostra o perfil e as capacidades do projeto."),
 }
 
 

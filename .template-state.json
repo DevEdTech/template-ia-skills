@@ -3,5 +3,10 @@
   "displayName": "Skills Project Template",
   "description": "Template para criar, validar, avaliar e distribuir skills de agentes de IA.",
   "repository": "https://github.com/DevEdTech/template-ia-skills",
-  "exampleRemoved": false
+  "exampleRemoved": false,
+  "profile": "padrao",
+  "capabilities": {
+    "packaging": true,
+    "evals": true
+  }
 }

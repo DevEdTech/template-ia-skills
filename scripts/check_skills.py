@@ -36,6 +36,7 @@ import argparse
 import ast
 import re
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import unquote
 
@@ -43,7 +44,17 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SOURCE_DIRNAME = "skills"
 COPY_DIRS = (".claude/skills", ".agents/skills")
 
-ALLOWED_TOP_LEVEL = {"SKILL.md", "reference", "scripts", "assets", "requirements.txt"}
+ALLOWED_TOP_LEVEL = {
+    "SKILL.md",
+    "reference",
+    "scripts",
+    "assets",
+    "requirements.txt",
+    # Teste junto da skill: ela viaja autocontida, com a propria rede de
+    # seguranca. Nao entra no pacote distribuido (ver package_skills.py) nem
+    # conta como conteudo orfao.
+    "tests",
+}
 CONTENT_DIRS = ("reference", "scripts", "assets")
 ALLOWED_FRONTMATTER = {"name", "description", "license", "allowed-tools", "metadata"}
 
@@ -59,6 +70,54 @@ TRIGGER_MARKERS = ("quando", "use ", "usar", "ao ", "antes de", "depois de", "wh
 FILLER_PREFIXES = ("esta skill", "essa skill", "uma skill", "a skill", "this skill", "skill que")
 
 MAX_BODY_LINES = 500
+
+#: Regras que sao heuristica, nao verdade: uma varredura de substring nao sabe
+#: se a descricao ensina o acionamento. Elas avisam; nao reprovam. `--strict`
+#: (e o CI) tratam aviso como falha.
+HEURISTIC_RULES = frozenset({"description-trigger", "description-filler"})
+
+#: Regras cujo limite admite dispensa justificada. Um fluxo de trabalho
+#: legitimamente longo existe — o repositorio documenta isso — e a escolha
+#: entre quebrar a skill e burlar o numero nao deveria ser a unica saida.
+#: A dispensa fica no frontmatter e aparece no relatorio: ela registra uma
+#: decisao consciente, em vez de desligar a regra em silencio.
+WAIVABLE_RULES = frozenset(
+    {
+        "body-lines",
+        "name-terms",
+        "name-chars",
+        "description-min",
+        "description-max",
+        "top-level-entry",
+        "skill-size",
+    }
+)
+
+#: Uma dispensa sem motivo e so um `# noqa`: o texto precisa dizer por que.
+MIN_WAIVER_CHARS = 30
+
+
+@dataclass(frozen=True)
+class Finding:
+    """Um achado da verificacao, com a regra que o produziu."""
+
+    skill: str
+    rule: str
+    message: str
+    #: Motivo da dispensa, quando a skill declarou uma para esta regra.
+    waiver: str | None = None
+
+    @property
+    def is_error(self) -> bool:
+        """Heuristica e regra dispensada avisam; o resto reprova."""
+        return self.rule not in HEURISTIC_RULES and self.waiver is None
+
+    def render(self) -> str:
+        if self.waiver is not None:
+            return f"{self.message} [dispensa: {self.waiver}]"
+        return self.message
+
+
 MAX_SKILL_BYTES = 5 * 1024 * 1024
 
 SCRIPT_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_]*\.py$")
@@ -81,6 +140,11 @@ def list_skill_dirs(directory: Path) -> list[str]:
     return sorted(entry.name for entry in directory.iterdir() if entry.is_dir())
 
 
+#: Pastas que sao da skill mas nao do pacote: o teste existe para quem
+#: desenvolve a skill, nao para quem a instala.
+NOT_PACKAGED_DIRS = frozenset({"tests"})
+
+
 def is_content(path: Path) -> bool:
     """Um arquivo é conteúdo da skill quando não é artefato de execução."""
     return (
@@ -88,6 +152,18 @@ def is_content(path: Path) -> bool:
         and path.suffix not in IGNORED_SUFFIXES
         and not IGNORED_DIRS.intersection(path.parts)
     )
+
+
+def is_packaged(path: Path, skill_dir: Path) -> bool:
+    """Um arquivo entra no pacote distribuído?
+
+    `tests/` fica de fora: ele dobraria o tamanho do pacote para entregar
+    algo que só serve a quem edita a skill.
+    """
+    if not is_content(path):
+        return False
+    relative = path.relative_to(skill_dir).parts
+    return not (relative and relative[0] in NOT_PACKAGED_DIRS)
 
 
 def list_files_recursive(directory: Path) -> list[str]:
@@ -127,6 +203,100 @@ def parse_frontmatter(content: str) -> dict[str, str] | None:
     return data
 
 
+def parse_waivers(content: str) -> dict[str, str]:
+    """Le `metadata.waivers` do frontmatter: regra -> motivo.
+
+    O parser principal so enxerga chaves de primeiro nivel, de proposito. Aqui
+    a leitura e deliberadamente estreita: um bloco `waivers:` dentro de
+    `metadata:`, com uma linha `regra: motivo` por dispensa. Sem libs externas.
+    """
+    lines = content.replace("\r\n", "\n").split("\n")
+    if not lines or lines[0].strip() != "---":
+        return {}
+    end = next((i for i in range(1, len(lines)) if lines[i].strip() == "---"), -1)
+    if end == -1:
+        return {}
+
+    waivers: dict[str, str] = {}
+    dentro_de_metadata = False
+    dentro_de_waivers = False
+    for line in lines[1:end]:
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        indent = len(line) - len(line.lstrip())
+        if indent == 0:
+            dentro_de_metadata = line.split(":", 1)[0].strip() == "metadata"
+            dentro_de_waivers = False
+            continue
+        if not dentro_de_metadata:
+            continue
+        chave, separador, valor = line.strip().partition(":")
+        if not separador:
+            continue
+        if chave.strip() == "waivers" and not valor.strip():
+            dentro_de_waivers = True
+            continue
+        if not dentro_de_waivers:
+            continue
+        motivo = valor.strip()
+        if len(motivo) >= 2 and motivo[0] == motivo[-1] and motivo[0] in "\"'":
+            motivo = motivo[1:-1]
+        waivers[chave.strip()] = motivo
+    return waivers
+
+
+def apply_waivers(findings: list[Finding], waivers: dict[str, str], skill: str) -> list[Finding]:
+    """Marca os achados dispensados e reprova dispensa invalida.
+
+    Uma dispensa só vale para regra dispensável e com motivo escrito: dispensar
+    "name-divergente" ou escrever "porque sim" seria desligar a verificação, não
+    registrar uma decisão.
+    """
+    resultado: list[Finding] = []
+    usadas: set[str] = set()
+    for finding in findings:
+        motivo = waivers.get(finding.rule)
+        if (
+            motivo is not None
+            and finding.rule in WAIVABLE_RULES
+            and len(motivo) >= MIN_WAIVER_CHARS
+        ):
+            usadas.add(finding.rule)
+            resultado.append(Finding(finding.skill, finding.rule, finding.message, waiver=motivo))
+            continue
+        resultado.append(finding)
+
+    for rule, motivo in sorted(waivers.items()):
+        if rule not in WAIVABLE_RULES:
+            resultado.append(
+                Finding(
+                    skill,
+                    "waiver-invalida",
+                    f'{skill}: regra "{rule}" não admite dispensa. '
+                    f"Dispensáveis: {', '.join(sorted(WAIVABLE_RULES))}.",
+                )
+            )
+        elif len(motivo) < MIN_WAIVER_CHARS:
+            resultado.append(
+                Finding(
+                    skill,
+                    "waiver-invalida",
+                    f'{skill}: a dispensa de "{rule}" precisa de ao menos '
+                    f"{MIN_WAIVER_CHARS} caracteres explicando o motivo.",
+                )
+            )
+        elif rule not in usadas:
+            resultado.append(
+                Finding(
+                    skill,
+                    "waiver-ociosa",
+                    f'{skill}: dispensa de "{rule}" declarada sem a regra ter sido '
+                    "acionada; remova-a para o frontmatter não mentir.",
+                )
+            )
+    return resultado
+
+
 def body_after_frontmatter(content: str) -> list[str]:
     """Retorna as linhas do corpo do SKILL.md, sem o frontmatter."""
     lines = content.replace("\r\n", "\n").split("\n")
@@ -136,79 +306,149 @@ def body_after_frontmatter(content: str) -> list[str]:
     return lines if end == -1 else lines[end + 1 :]
 
 
-def _check_name(skill: str, name: str | None) -> list[str]:
+def _check_name(skill: str, name: str | None) -> list[Finding]:
     if not name:
-        return [f'{skill}: campo "name" ausente ou vazio no frontmatter.']
-    errors: list[str] = []
+        return [Finding(skill, "name-ausente", f'{skill}: campo "name" ausente ou vazio.')]
+    findings: list[Finding] = []
     if name != skill:
-        errors.append(f'{skill}: "name" ("{name}") difere do nome da pasta.')
-    if not NAME_PATTERN.match(name):
-        errors.append(f'{skill}: "name" deve ser kebab-case (letras minúsculas, dígitos e "-").')
-    if len(name) > MAX_NAME_CHARS:
-        errors.append(f'{skill}: "name" passa de {MAX_NAME_CHARS} caracteres.')
-    if len(name.split("-")) > MAX_NAME_TERMS:
-        errors.append(
-            f'{skill}: "name" tem mais de {MAX_NAME_TERMS} termos; prefira verbo + objeto.'
+        findings.append(
+            Finding(
+                skill,
+                "name-divergente",
+                f'{skill}: "name" ("{name}") difere do nome da pasta.',
+            )
         )
-    return errors
+    if not NAME_PATTERN.match(name):
+        findings.append(
+            Finding(
+                skill,
+                "name-formato",
+                f'{skill}: "name" deve ser kebab-case (letras minúsculas, dígitos e "-").',
+            )
+        )
+    if len(name) > MAX_NAME_CHARS:
+        findings.append(
+            Finding(
+                skill,
+                "name-chars",
+                f'{skill}: "name" passa de {MAX_NAME_CHARS} caracteres.',
+            )
+        )
+    if len(name.split("-")) > MAX_NAME_TERMS:
+        findings.append(
+            Finding(
+                skill,
+                "name-terms",
+                f'{skill}: "name" tem mais de {MAX_NAME_TERMS} termos; prefira verbo + objeto.',
+            )
+        )
+    return findings
 
 
-def _check_description(skill: str, description: str | None) -> list[str]:
+def _check_description(skill: str, description: str | None) -> list[Finding]:
     if not description:
-        return [f'{skill}: campo "description" ausente ou vazio no frontmatter.']
-    errors: list[str] = []
+        return [
+            Finding(skill, "description-ausente", f'{skill}: campo "description" ausente ou vazio.')
+        ]
+    findings: list[Finding] = []
     normalized = description.strip().lower()
     if len(description) < MIN_DESCRIPTION_CHARS:
-        errors.append(
-            f'{skill}: "description" tem menos de {MIN_DESCRIPTION_CHARS} caracteres; '
-            "diga o que a skill faz e quando usá-la."
+        findings.append(
+            Finding(
+                skill,
+                "description-min",
+                f'{skill}: "description" tem menos de {MIN_DESCRIPTION_CHARS} caracteres; '
+                "diga o que a skill faz e quando usá-la.",
+            )
         )
     if len(description) > MAX_DESCRIPTION_CHARS:
-        errors.append(
-            f'{skill}: "description" passa de {MAX_DESCRIPTION_CHARS} caracteres '
-            "(limite de quem carrega a skill)."
+        findings.append(
+            Finding(
+                skill,
+                "description-max",
+                f'{skill}: "description" passa de {MAX_DESCRIPTION_CHARS} caracteres '
+                "(limite de quem carrega a skill).",
+            )
         )
     if "\n" in description:
-        errors.append(f'{skill}: "description" deve ocupar uma única linha.')
+        findings.append(
+            Finding(
+                skill,
+                "description-linha",
+                f'{skill}: "description" deve ocupar uma única linha.',
+            )
+        )
+    # As duas abaixo sao heuristica (ver HEURISTIC_RULES): uma varredura de
+    # substring nao sabe se o texto ensina o acionamento. Elas chamam atencao
+    # de quem escreve; nao decidem no lugar dessa pessoa.
     if not any(marker in normalized for marker in TRIGGER_MARKERS):
-        errors.append(
-            f'{skill}: "description" não indica o acionamento; inclua "use quando ..." '
-            "com as situações que disparam a skill."
+        findings.append(
+            Finding(
+                skill,
+                "description-trigger",
+                f'{skill}: "description" talvez não indique o acionamento; '
+                'descreva as situações que disparam a skill ("use quando ...").',
+            )
         )
     if normalized.startswith(FILLER_PREFIXES):
-        errors.append(f'{skill}: "description" começa com enchimento; comece pelo que a skill faz.')
-    return errors
+        findings.append(
+            Finding(
+                skill,
+                "description-filler",
+                f'{skill}: "description" começa com enchimento; comece pelo que a skill faz.',
+            )
+        )
+    return findings
 
 
-def _check_frontmatter(skill: str, skill_md: Path) -> list[str]:
+def _check_frontmatter(skill: str, skill_md: Path) -> list[Finding]:
     content = skill_md.read_text(encoding="utf-8")
     meta = parse_frontmatter(content)
     if meta is None:
         return [
-            f"{skill}: frontmatter YAML ausente ou malformado em SKILL.md "
-            '(esperado bloco entre linhas "---").'
+            Finding(
+                skill,
+                "frontmatter",
+                f"{skill}: frontmatter YAML ausente ou malformado em SKILL.md "
+                '(esperado bloco entre linhas "---").',
+            )
         ]
 
-    errors: list[str] = []
+    findings: list[Finding] = []
     unknown = sorted(set(meta) - ALLOWED_FRONTMATTER)
     if unknown:
-        errors.append(
-            f"{skill}: chave(s) desconhecida(s) no frontmatter: {', '.join(unknown)}. "
-            f"Permitidas: {', '.join(sorted(ALLOWED_FRONTMATTER))}."
+        findings.append(
+            Finding(
+                skill,
+                "frontmatter-chave",
+                f"{skill}: chave(s) desconhecida(s) no frontmatter: {', '.join(unknown)}. "
+                f"Permitidas: {', '.join(sorted(ALLOWED_FRONTMATTER))}.",
+            )
         )
-    errors.extend(_check_name(skill, meta.get("name")))
-    errors.extend(_check_description(skill, meta.get("description")))
+    findings.extend(_check_name(skill, meta.get("name")))
+    findings.extend(_check_description(skill, meta.get("description")))
 
     body = body_after_frontmatter(content)
     heading = next((line for line in body if line.strip()), "")
     if not heading.startswith("# "):
-        errors.append(f"{skill}: o corpo do SKILL.md deve começar com um título `# `.")
-    if len(body) > MAX_BODY_LINES:
-        errors.append(
-            f"{skill}: SKILL.md tem {len(body)} linhas (máximo {MAX_BODY_LINES}). "
-            "Mova o detalhamento para `reference/` e carregue sob demanda."
+        findings.append(
+            Finding(
+                skill,
+                "body-titulo",
+                f"{skill}: o corpo do SKILL.md deve começar com um título `# `.",
+            )
         )
-    return errors
+    if len(body) > MAX_BODY_LINES:
+        findings.append(
+            Finding(
+                skill,
+                "body-lines",
+                f"{skill}: SKILL.md tem {len(body)} linhas (máximo {MAX_BODY_LINES}). "
+                "Mova o detalhamento para `reference/` e carregue sob demanda, "
+                "ou declare a dispensa `body-lines` com o motivo.",
+            )
+        )
+    return findings
 
 
 def _referenced_targets(text: str) -> tuple[set[str], set[str]]:
@@ -227,23 +467,32 @@ def _referenced_targets(text: str) -> tuple[set[str], set[str]]:
     return links, set(_INLINE_PATH.findall(text))
 
 
-def _check_layout(skill: str, skill_dir: Path) -> list[str]:
-    errors: list[str] = []
+def _check_layout(skill: str, skill_dir: Path) -> list[Finding]:
+    findings: list[Finding] = []
     for entry in sorted(skill_dir.iterdir()):
         if entry.name in IGNORED_DIRS:
             continue
         if entry.name not in ALLOWED_TOP_LEVEL:
-            errors.append(
-                f"{skill}: entrada não prevista `{entry.name}`. "
-                f"Use apenas {', '.join(sorted(ALLOWED_TOP_LEVEL))}."
+            findings.append(
+                Finding(
+                    skill,
+                    "top-level-entry",
+                    f"{skill}: entrada não prevista `{entry.name}`. "
+                    f"Use apenas {', '.join(sorted(ALLOWED_TOP_LEVEL))}, "
+                    "ou declare a dispensa `top-level-entry` com o motivo.",
+                )
             )
     total = sum(path.stat().st_size for path in skill_dir.rglob("*") if is_content(path))
     if total > MAX_SKILL_BYTES:
-        errors.append(
-            f"{skill}: a skill ocupa {total // 1024} KiB "
-            f"(máximo {MAX_SKILL_BYTES // 1024} KiB); mantenha os assets enxutos."
+        findings.append(
+            Finding(
+                skill,
+                "skill-size",
+                f"{skill}: a skill ocupa {total // 1024} KiB "
+                f"(máximo {MAX_SKILL_BYTES // 1024} KiB); mantenha os assets enxutos.",
+            )
         )
-    return errors
+    return findings
 
 
 def _check_references(skill: str, skill_dir: Path) -> list[str]:
@@ -357,18 +606,26 @@ def _check_scripts(skill: str, skill_dir: Path) -> list[str]:
     return errors
 
 
-def validate_skill(skill_dir: Path) -> list[str]:
+def _as_findings(skill: str, rule: str, messages: list[str]) -> list[Finding]:
+    """Embrulha mensagens de texto em achados com a regra que as produziu."""
+    return [Finding(skill, rule, message) for message in messages]
+
+
+def validate_skill(skill_dir: Path) -> list[Finding]:
     """Valida uma skill isolada (também usada sobre o pacote extraído)."""
     skill = skill_dir.name
     skill_md = skill_dir / "SKILL.md"
     if not skill_md.is_file():
-        return [f"{skill}: arquivo SKILL.md ausente."]
-    return [
+        return [Finding(skill, "skill-md-ausente", f"{skill}: arquivo SKILL.md ausente.")]
+
+    findings = [
         *_check_frontmatter(skill, skill_md),
         *_check_layout(skill, skill_dir),
-        *_check_references(skill, skill_dir),
-        *_check_scripts(skill, skill_dir),
+        *_as_findings(skill, "reference", _check_references(skill, skill_dir)),
+        *_as_findings(skill, "script", _check_scripts(skill, skill_dir)),
     ]
+    waivers = parse_waivers(skill_md.read_text(encoding="utf-8"))
+    return apply_waivers(findings, waivers, skill) if waivers else findings
 
 
 def _check_unique_scripts(root: Path, skills: list[str]) -> list[str]:
@@ -420,20 +677,20 @@ def _compare_copies(root: Path, skills: list[str]) -> list[str]:
     return errors
 
 
-def check_skills(root: Path = PROJECT_ROOT, *, compare_copies: bool = True) -> list[str]:
-    """Valida todas as skills do repositório e devolve a lista de problemas."""
+def check_skills(root: Path = PROJECT_ROOT, *, compare_copies: bool = True) -> list[Finding]:
+    """Valida todas as skills do repositório e devolve os achados."""
     source_root = root / SOURCE_DIRNAME
     skills = list_skill_dirs(source_root)
     if not skills:
-        return [f'Nenhuma skill encontrada em "{source_root}".']
+        return [Finding("", "sem-skills", f'Nenhuma skill encontrada em "{source_root}".')]
 
-    errors: list[str] = []
+    findings: list[Finding] = []
     for skill in skills:
-        errors.extend(validate_skill(source_root / skill))
-    errors.extend(_check_unique_scripts(root, skills))
+        findings.extend(validate_skill(source_root / skill))
+    findings.extend(_as_findings("", "script-unico", _check_unique_scripts(root, skills)))
     if compare_copies:
-        errors.extend(_compare_copies(root, skills))
-    return errors
+        findings.extend(_as_findings("", "copia", _compare_copies(root, skills)))
+    return findings
 
 
 def main() -> int:
@@ -446,19 +703,44 @@ def main() -> int:
         action="store_true",
         help="Não compara as cópias geradas em .claude/skills e .agents/skills.",
     )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Trata aviso (heurística e dispensa) como falha.",
+    )
     args = parser.parse_args()
     root = args.root.resolve()
-    errors = check_skills(root, compare_copies=not args.skip_copies)
+    findings = check_skills(root, compare_copies=not args.skip_copies)
+
+    errors = [f for f in findings if f.is_error]
+    warnings = [f for f in findings if not f.is_error]
+
+    if warnings:
+        titulo = "Avisos de skills" if not args.strict else "Avisos de skills (estritos)"
+        print(f"{titulo}:\n", file=sys.stderr)
+        for warning in warnings:
+            print(f"  - [{warning.rule}] {warning.render()}", file=sys.stderr)
+        print("", file=sys.stderr)
 
     if errors:
         print("Verificação de skills FALHOU:\n", file=sys.stderr)
         for error in errors:
-            print(f"  - {error}", file=sys.stderr)
+            print(f"  - [{error.rule}] {error.message}", file=sys.stderr)
         print(f"\nTotal de problemas: {len(errors)}.", file=sys.stderr)
         return 1
 
+    if warnings and args.strict:
+        print(
+            f"{len(warnings)} aviso(s) tratados como falha por --strict.",
+            file=sys.stderr,
+        )
+        return 1
+
     skills = list_skill_dirs(root / SOURCE_DIRNAME)
-    print(f"Verificação de skills OK: {len(skills)} skill(s) validada(s) e sincronizada(s).")
+    sufixo = f" com {len(warnings)} aviso(s)" if warnings else ""
+    print(
+        f"Verificação de skills OK{sufixo}: {len(skills)} skill(s) validada(s) e sincronizada(s)."
+    )
     for skill in skills:
         print(f"  - {skill}")
     return 0

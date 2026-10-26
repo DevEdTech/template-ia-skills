@@ -1,6 +1,7 @@
 # Contexto do projeto para o Claude Code
 
-Leia e siga o `AGENTS.md`.
+Leia e siga o `AGENTS.md`. Comece conferindo o perfil deste projeto com
+`python scripts/dev.py show-profile`: ele decide o que bloqueia.
 
 Depois leia, quando relevante:
 
@@ -19,7 +20,8 @@ Para criar uma skill:
 1. use a skill de planejamento (plan-skill) e obtenha aprovação da especificação;
 2. gere o esqueleto com `python scripts/dev.py new-skill`;
 3. implemente com a skill create-skill, um incremento por vez;
-4. execute `python scripts/dev.py validate`;
+4. execute `python scripts/dev.py validate --skill <nome>` ao iterar e
+   `python scripts/dev.py validate` antes de concluir;
 5. avalie com evaluate-skill e revise com review-skill;
 6. atualize o catálogo com document-skills;
 7. revise o diff final.

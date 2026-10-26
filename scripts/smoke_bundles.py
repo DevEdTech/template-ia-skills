@@ -71,7 +71,11 @@ def smoke_bundles(root: Path = PROJECT_ROOT) -> list[str]:
                 errors.append(f"{bundle.name}: o pacote não contém `{bundle.stem}/SKILL.md`.")
                 continue
 
-            errors.extend(f"{bundle.name}: {error}" for error in validate_skill(extracted))
+            errors.extend(
+                f"{bundle.name}: {finding.message}"
+                for finding in validate_skill(extracted)
+                if finding.is_error
+            )
 
             if (extracted / "requirements.txt").is_file():
                 continue
