@@ -164,6 +164,8 @@ def _commands_for(
         return [script("check_evals.py")]
     if suite.name == "check-docs":
         return [script("check_docs.py")]
+    if suite.name == "check-lockfile":
+        return [script("check_lockfile.py")]
     if suite.name == "format-check":
         alvos = [p for p in target_paths if p.endswith(".py")] if scoped else []
         return [tool("ruff", "format", "--check", *alvos)] if alvos or not scoped else []

@@ -177,6 +177,7 @@ python scripts/dev.py audit
 | `python scripts/dev.py check-skills`       | Valida metadados, estrutura, links, órfãos e cópias             |
 | `python scripts/dev.py check-evals`        | Valida os cenários de avaliação de cada skill                   |
 | `python scripts/dev.py check-docs`         | Valida links, tarefas e o catálogo de skills                    |
+| `python scripts/dev.py check-lockfile`     | Confere se o `uv.lock` corresponde ao `pyproject.toml`          |
 | `python scripts/dev.py eval-sheet`         | Imprime a folha de avaliação para rodar com um agente           |
 | `python scripts/dev.py package`            | Empacota cada skill em um `.zip` determinístico com manifesto   |
 | `python scripts/dev.py smoke-bundles`      | Extrai os pacotes e prova que funcionam fora do repositório     |

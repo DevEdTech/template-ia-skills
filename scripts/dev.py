@@ -109,6 +109,10 @@ def task_check_evals(args: list[str]) -> int:
     return _run(_script("check_evals.py", *args))
 
 
+def task_check_lockfile(args: list[str]) -> int:
+    return _run(_script("check_lockfile.py", *args))
+
+
 def task_check_docs(args: list[str]) -> int:
     return _run(_script("check_docs.py", *args))
 
@@ -217,6 +221,10 @@ TASKS = {
     "sync-skills": (task_sync_skills, "Sincroniza as skills para .claude e .agents."),
     "check-skills": (task_check_skills, "Valida metadados, estrutura e cópias das skills."),
     "check-evals": (task_check_evals, "Valida os cenários de avaliação das skills."),
+    "check-lockfile": (
+        task_check_lockfile,
+        "Confere se o uv.lock corresponde ao pyproject.toml.",
+    ),
     "check-docs": (task_check_docs, "Valida links, tarefas e catálogo da documentação."),
     "new-skill": (task_new_skill, "Cria o esqueleto de uma skill nova."),
     "package": (task_package, "Empacota cada skill em um .zip distribuível."),
