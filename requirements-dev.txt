@@ -2,7 +2,7 @@
 # A duplicacao e inevitavel: o pip nao le PEP 735. O tests/test_toolchain.py
 # impede que os dois arquivos divirjam.
 ruff>=0.17.2
-mypy>=2.3.0
+mypy>=2.4.0
 pytest>=9.1.0
 pytest-cov>=7.1.0
-pre-commit>=4.4.0
+pre-commit>=4.6.2
